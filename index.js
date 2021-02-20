@@ -1,11 +1,30 @@
 const Discord = require("discord.js");
 const botConfig = require("./botConfig.json");
 const findNextLesson = require("./utils/findNextLesson.js");
-const parseSchedule = require("./utils/parseSchedule.js");
+const {parseSchedule, parseScheduleTeacher} = require("./utils/parseSchedule.js");
 
 const discordClient = new Discord.Client();
 
 const commandPrefix = "!";
+
+const getMessage = (lessons, isTeacher) => {
+  const nextLesson = findNextLesson(lessons);
+  if (nextLesson) {
+    return nextLessonMessage = `
+      Предмет: ${nextLesson.type} ${nextLesson.subject},
+      Дата: ${nextLesson.startsAt.year}.${nextLesson.startsAt.month}.${nextLesson.startsAt.day},
+      Время: ${nextLesson.time.start}-${nextLesson.time.end}
+      Аудитория: ${nextLesson.audiences[0].name}
+      ${isTeacher ? `Группы: ${nextLesson.groups.join(", ")}` : `Преподаватель: ${nextLesson.teachers[0].name}`}
+      `;
+  } else {
+    return "Ближайших пар нет";
+  }
+}
+         
+        
+
+
 
 discordClient.on("message", async (msg) => {
   if (msg.author.bot) return;
@@ -20,27 +39,28 @@ discordClient.on("message", async (msg) => {
       return;
     }
     switch(splitted[0].slice(1)) {
-      case 'next-lesson': {
-        const lessons = parseSchedule("2-147");
-        console.log(lessons);
-        const nextLesson = findNextLesson(lessons);
-        // const nextLesson = "";
-        if (nextLesson) {
-          const nextLessonMessage = `
-            Предмет: ${nextLesson.type} ${nextLesson.subject},
-            Дата: ${nextLesson.startsAt.year}.${nextLesson.startsAt.month}.${nextLesson.startsAt.day},
-            Время: ${nextLesson.time.start}-${nextLesson.time.end}
-            Аудитория: ${nextLesson.audiences[0].name}
-            Группы: ${nextLesson.groups.join(", ")}
-          `;
-
-          channel.send(nextLessonMessage);
-        } else {
-          channel.send("Ближайших пар нет");
-        }
-
+      case 'новая-пара': {
+        if (splitted.length > 1){
+        const lessons = parseSchedule(splitted[1]);
+        const message = getMessage(lessons, false);
+        channel.send(message);
+      } else {
+        channel.send("Неверный формат необходимо указать группу в формате курс-группа, например 1-42");
+      }
         break;
       }
+      case 'Сенсей': {
+        if (splitted.length > 1){
+          const lessons = parseScheduleTeacher(`${splitted[1]} ${splitted[2]}`);
+          const message = getMessage(lessons, true);
+          channel.send(message); 
+        } else {
+          channel.send("Неверный формат необходимо указать Фамилия И.О.");
+        }
+        break;
+      }
+
+
       case 'gav': {
         if (splitted.length > 1){
           channel.send(`${msg.author.username} ${msg.author.tag}`);

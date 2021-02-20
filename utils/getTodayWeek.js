@@ -7,7 +7,7 @@ const getTodayWeek = (today) => {
   const firstWeekStartsAt = septemberDate.startOf('week');
   const diffInDays = Interval.fromDateTimes(firstWeekStartsAt, today).length('days');
 
-  return (isEven(diffInDays / 7) ? 1 : 2);
+  return (isEven(diffInDays / 7) ? 2 : 1);
 };
 
 module.exports = getTodayWeek;
